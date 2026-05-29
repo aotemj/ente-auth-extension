@@ -397,14 +397,20 @@ const isExcludedField = (input: HTMLInputElement): boolean => {
     }
 
     // Walk up a few levels of ancestors looking for OOB hints in nearby text.
-    // Capped to avoid scanning huge subtrees.
-    let oobAncestor: HTMLElement | null = input.parentElement;
-    for (let depth = 0; depth < 4 && oobAncestor && oobAncestor !== document.body; depth++) {
-        const nearbyText = oobAncestor.textContent || "";
-        if (matchesPattern(nearbyText.slice(0, 500), OOB_LABEL_PATTERNS)) {
-            return true;
+    // Skipped when autocomplete="one-time-code" is set: that attribute is the
+    // HTML standard signal of developer intent for an OTP field, and the broad
+    // ancestor scan false-positives on legitimate TOTP forms that mention SMS
+    // or email anywhere in nearby boilerplate (backup options, help links,
+    // footer copy). Precise signals above still apply.
+    if (input.autocomplete !== "one-time-code") {
+        let oobAncestor: HTMLElement | null = input.parentElement;
+        for (let depth = 0; depth < 4 && oobAncestor && oobAncestor !== document.body; depth++) {
+            const nearbyText = oobAncestor.textContent || "";
+            if (matchesPattern(nearbyText.slice(0, 500), OOB_LABEL_PATTERNS)) {
+                return true;
+            }
+            oobAncestor = oobAncestor.parentElement;
         }
-        oobAncestor = oobAncestor.parentElement;
     }
 
     return false;
