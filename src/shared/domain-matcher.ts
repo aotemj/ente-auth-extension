@@ -115,25 +115,25 @@ export const matchCodesToDomain = (
     const baseDomain = getBaseDomain(hostname);
     const matches: DomainMatch[] = [];
 
+    // Check if there's a custom mapping for this domain — if so, only return
+    // codes that match the custom mapping. This prevents unrelated codes from
+    // showing up alongside the explicitly configured one.
+    const activeCustomMapping = customMappings.find((mapping) => {
+        const mappingDomain = mapping.domain.toLowerCase();
+        return domainMatches(hostname, mappingDomain) || hostname === mappingDomain;
+    });
+
     for (const code of codes) {
         const issuer = code.issuer.toLowerCase();
         const normalizedIssuer = normalizeIssuer(code.issuer);
         let confidence = 0;
 
         // 0. Check custom mappings FIRST (confidence: 0.99, just below exact match)
-        // Custom mappings match on exact domain or subdomain
-        const customMatch = customMappings.find((mapping) => {
-            const mappingDomain = mapping.domain.toLowerCase();
-            // Match if the hostname matches the mapping domain exactly or as subdomain
-            return domainMatches(hostname, mappingDomain) || hostname === mappingDomain;
-        });
-
-        if (customMatch) {
-            // Check if this code's issuer matches the custom mapping
-            const mappingIssuerNormalized = normalizeIssuer(customMatch.issuer);
+        if (activeCustomMapping) {
+            const mappingIssuerNormalized = normalizeIssuer(activeCustomMapping.issuer);
             if (
                 normalizedIssuer === mappingIssuerNormalized ||
-                code.issuer.toLowerCase() === customMatch.issuer.toLowerCase() ||
+                code.issuer.toLowerCase() === activeCustomMapping.issuer.toLowerCase() ||
                 // Also match if code issuer contains the mapping issuer or vice versa
                 // This handles cases like code issuer "FinPoints GitLab" matching mapping issuer "GitLab"
                 // Only apply substring matching when the shorter string is at least 4 chars
@@ -141,6 +141,9 @@ export const matchCodesToDomain = (
                 (normalizedIssuer.length >= 4 && mappingIssuerNormalized.includes(normalizedIssuer))
             ) {
                 confidence = 0.99;
+            } else {
+                // Custom mapping exists but this code doesn't match it — skip
+                continue;
             }
         }
 
