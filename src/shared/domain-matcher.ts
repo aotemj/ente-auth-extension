@@ -133,7 +133,12 @@ export const matchCodesToDomain = (
             const mappingIssuerNormalized = normalizeIssuer(customMatch.issuer);
             if (
                 normalizedIssuer === mappingIssuerNormalized ||
-                code.issuer.toLowerCase() === customMatch.issuer.toLowerCase()
+                code.issuer.toLowerCase() === customMatch.issuer.toLowerCase() ||
+                // Also match if code issuer contains the mapping issuer or vice versa
+                // This handles cases like code issuer "FinPoints GitLab" matching mapping issuer "GitLab"
+                // Only apply substring matching when the shorter string is at least 4 chars
+                (mappingIssuerNormalized.length >= 4 && normalizedIssuer.includes(mappingIssuerNormalized)) ||
+                (normalizedIssuer.length >= 4 && mappingIssuerNormalized.includes(normalizedIssuer))
             ) {
                 confidence = 0.99;
             }

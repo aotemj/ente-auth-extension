@@ -100,6 +100,13 @@ export const App: React.FC = () => {
         setSyncSuccess(false);
         try {
             await sendMessage({ type: "SYNC_CODES" });
+            // Refresh codes list so custom mapping dropdown has latest issuers
+            const codesResponse = await sendMessage<{ success: boolean; data?: { codes: Code[] } }>({
+                type: "GET_CODES",
+            });
+            if (codesResponse.success && codesResponse.data?.codes) {
+                setCodes(codesResponse.data.codes);
+            }
             setSyncSuccess(true);
             setTimeout(() => setSyncSuccess(false), 2000);
         } catch (e) {
