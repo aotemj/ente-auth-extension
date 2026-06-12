@@ -186,7 +186,7 @@ const handleMessage = async (
             // Load and set custom mappings before matching
             const customMappings = await customMappingsStorage.getMappings();
             setCustomMappings(customMappings);
-            const matches = matchCodesToDomain(codes, message.domain);
+            const matches = matchCodesToDomain(codes, message.domain, message.path);
             const timeOffset = await getTimeOffset();
             return { success: true, data: { matches, timeOffset, authState } };
         }

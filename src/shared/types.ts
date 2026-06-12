@@ -135,7 +135,7 @@ export interface ParsedQRCode {
  */
 export type ExtensionMessage =
     | { type: "GET_CODES"; forceSync?: boolean }
-    | { type: "GET_CODES_FOR_DOMAIN"; domain: string }
+    | { type: "GET_CODES_FOR_DOMAIN"; domain: string; path?: string }
     | { type: "SYNC_CODES" }
     | { type: "LOGIN"; token: string; keyAttributes: KeyAttributes }
     | { type: "LOGIN_COMPLETE"; token: string; email: string; keyAttributes: KeyAttributes; masterKey: string }
@@ -221,7 +221,7 @@ export interface DomainMatch {
  * Custom domain mapping created by the user.
  */
 export interface CustomDomainMapping {
-    /** The domain to match, e.g., "mycompany.okta.com" */
+    /** The domain to match, e.g., "mycompany.okta.com" or "auth.company.com/realms/prod" */
     domain: string;
     /** The issuer name to match, e.g., "Okta - Work" (matches Code.issuer) */
     issuer: string;

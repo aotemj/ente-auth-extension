@@ -101,27 +101,80 @@ const domainMatches = (hostname: string, domain: string): boolean => {
 };
 
 /**
+ * Parse a custom mapping domain string into hostname and optional path prefix.
+ * e.g., "auth.company.com/realms/prod" → { hostname: "auth.company.com", path: "/realms/prod" }
+ * e.g., "company.com" → { hostname: "company.com", path: "/" }
+ */
+const parseMappingDomain = (mappingDomain: string): { hostname: string; path: string } => {
+    const slashIndex = mappingDomain.indexOf("/");
+    if (slashIndex === -1) {
+        return { hostname: mappingDomain, path: "/" };
+    }
+    return {
+        hostname: mappingDomain.slice(0, slashIndex),
+        path: mappingDomain.slice(slashIndex),
+    };
+};
+
+/**
+ * Find the best matching custom mapping for a given hostname and path.
+ * When multiple mappings match, the one with the longest (most specific) path wins.
+ */
+const findBestCustomMapping = (hostname: string, currentPath: string): CustomDomainMapping | undefined => {
+    let bestMapping: CustomDomainMapping | undefined;
+    let bestPathLength = -1;
+
+    for (const mapping of customMappings) {
+        const { hostname: mappingHost, path: mappingPath } = parseMappingDomain(mapping.domain.toLowerCase());
+
+        // Check if hostname matches
+        if (!domainMatches(hostname, mappingHost) && hostname !== mappingHost) {
+            continue;
+        }
+
+        // Check if path matches (prefix match)
+        if (mappingPath !== "/" && !currentPath.startsWith(mappingPath)) {
+            continue;
+        }
+
+        // Prefer the most specific (longest) path match
+        if (mappingPath.length > bestPathLength) {
+            bestPathLength = mappingPath.length;
+            bestMapping = mapping;
+        }
+    }
+
+    return bestMapping;
+};
+
+/**
  * Match codes to a domain.
  *
  * @param codes The list of codes to search.
  * @param domain The domain to match against.
+ * @param path Optional URL path for path-prefix based custom mapping matching.
  * @returns Sorted list of matches with confidence scores.
  */
 export const matchCodesToDomain = (
     codes: Code[],
-    domain: string
+    domain: string,
+    path?: string
 ): DomainMatch[] => {
     const hostname = domain.toLowerCase();
     const baseDomain = getBaseDomain(hostname);
+    const currentPath = (path || "/").toLowerCase();
     const matches: DomainMatch[] = [];
 
     // Check if there's a custom mapping for this domain — if so, only return
     // codes that match the custom mapping. This prevents unrelated codes from
     // showing up alongside the explicitly configured one.
-    const activeCustomMapping = customMappings.find((mapping) => {
-        const mappingDomain = mapping.domain.toLowerCase();
-        return domainMatches(hostname, mappingDomain) || hostname === mappingDomain;
-    });
+    //
+    // Custom mappings support optional path prefixes. When a mapping domain
+    // contains a "/" (e.g., "auth.company.com/realms/prod"), the path is
+    // extracted and matched as a prefix against the current URL path.
+    // When multiple mappings match, the one with the longest (most specific)
+    // path wins.
+    const activeCustomMapping = findBestCustomMapping(hostname, currentPath);
 
     for (const code of codes) {
         const issuer = code.issuer.toLowerCase();
@@ -231,9 +284,10 @@ export const matchCodesToDomain = (
  */
 export const getBestMatch = (
     codes: Code[],
-    domain: string
+    domain: string,
+    path?: string
 ): DomainMatch | undefined => {
-    const matches = matchCodesToDomain(codes, domain);
+    const matches = matchCodesToDomain(codes, domain, path);
     return matches[0];
 };
 

@@ -389,7 +389,7 @@ export const App: React.FC = () => {
                                 <div className="form-row">
                                     <input
                                         type="text"
-                                        placeholder="Domain (e.g., mycompany.okta.com)"
+                                        placeholder="Domain (e.g., mycompany.okta.com or auth.co.com/realms/prod)"
                                         value={newMappingDomain}
                                         onChange={(e) => setNewMappingDomain(e.target.value)}
                                         className="form-input"

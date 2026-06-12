@@ -1028,7 +1028,9 @@ export const showPopup = (
 
     if (!inputElement) return;
 
-    // Get current domain
+    // Get current domain for display in the "Save mapping?" dialog.
+    // Path-based mappings (e.g., "auth.company.com/realms/prod") should be
+    // configured manually in Options for precision; auto-save uses hostname only.
     const domain = window.location.hostname;
 
     // Create shadow host

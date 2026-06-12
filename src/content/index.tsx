@@ -97,6 +97,7 @@ const renderIconForCurrentDetection = async (): Promise<void> => {
         }>({
             type: "GET_CODES_FOR_DOMAIN",
             domain,
+            path: window.location.pathname,
         });
 
         const matches = response?.data?.matches || [];
