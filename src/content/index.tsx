@@ -158,11 +158,16 @@ const refreshIcon = (): void => {
 /**
  * Debounced check for MFA fields.
  */
-const debouncedCheck = (): void => {
+const debouncedCheck = (immediate = false): void => {
     if (debounceTimer) {
         clearTimeout(debounceTimer);
     }
-    debounceTimer = setTimeout(checkForMFAFields, 500);
+    if (immediate) {
+        // Skip debounce for user-initiated events (focus, click)
+        void checkForMFAFields();
+    } else {
+        debounceTimer = setTimeout(checkForMFAFields, 200);
+    }
 };
 
 /**
@@ -232,6 +237,10 @@ const init = (): void => {
                             node.querySelector?.("input"))
                 );
             }
+            // Attribute changes on inputs (e.g. type changing from hidden to text)
+            if (mutation.type === "attributes" && mutation.target instanceof HTMLInputElement) {
+                return true;
+            }
             return false;
         });
 
@@ -243,14 +252,17 @@ const init = (): void => {
     observer.observe(document.body, {
         childList: true,
         subtree: true,
+        attributes: true,
+        attributeFilter: ["type", "style", "class", "hidden"],
     });
 
     // Also check on focus events (for SPAs that show forms dynamically)
+    // Use immediate check (no debounce) since this is a direct user interaction
     document.addEventListener(
         "focusin",
         (e) => {
             if (e.target instanceof HTMLInputElement && !hasShownPopup) {
-                debouncedCheck();
+                debouncedCheck(true);
             }
         },
         true
@@ -286,6 +298,11 @@ const init = (): void => {
         // Check if the detected element is still valid
         if (hasShownPopup && !isDetectionValid()) {
             resetState();
+            debouncedCheck();
+        }
+
+        // Retry detection if we haven't shown popup yet (handles late-rendered inputs)
+        if (!hasShownPopup) {
             debouncedCheck();
         }
     }, 500);
