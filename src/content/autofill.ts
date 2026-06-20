@@ -13,11 +13,12 @@ export const fillCode = (detection: MFAFieldDetection, code: string, autoSubmit 
         fillSingleInput(detection.element, code);
     }
 
-    // Auto-submit after a short delay to let frameworks process the input
+    // Auto-submit after a delay to let frameworks process the input events
+    // and enable submit buttons (some frameworks need time for validation).
     if (autoSubmit) {
         setTimeout(() => {
             clickSubmitButton(detection.element);
-        }, 100);
+        }, 300);
     }
 };
 
@@ -146,11 +147,43 @@ const isLikelySubmitButton = (element: HTMLElement): boolean => {
 };
 
 /**
+ * Keywords that indicate a LOGIN/sign-in action rather than an MFA verification.
+ * These should NOT be matched when auto-submitting an MFA code, because clicking
+ * a "Sign In" button/link in the page header would navigate away from the 2FA
+ * form and cause errors (e.g. GitLab 422).
+ */
+const LOGIN_ONLY_KEYWORDS = [
+    "sign in", "signin", "login", "log in", "登录", "登入", "ログイン", "로그인",
+];
+
+/**
+ * Like isLikelySubmitButton but excludes login-specific keywords.
+ * Used for MFA auto-submit where we want "verify/confirm/continue" but NOT
+ * navigation-style "sign in" buttons that belong to a different flow.
+ */
+const isMFASubmitButton = (element: HTMLElement): boolean => {
+    const text = element.textContent?.toLowerCase().trim() || "";
+    const ariaLabel = element.getAttribute("aria-label")?.toLowerCase() || "";
+    const title = element.getAttribute("title")?.toLowerCase() || "";
+
+    // If the button text is ONLY a login keyword (not also a verify keyword),
+    // skip it — it's likely a navigation link, not an MFA submit.
+    for (const keyword of LOGIN_ONLY_KEYWORDS) {
+        if (text.includes(keyword) || ariaLabel.includes(keyword) || title.includes(keyword)) {
+            return false;
+        }
+    }
+
+    return isLikelySubmitButton(element);
+};
+
+/**
  * Find and click the submit button associated with an MFA input.
  */
 const clickSubmitButton = (input: HTMLInputElement): void => {
-    // Strategy 1: Find submit button in the same form
     const form = input.closest("form");
+
+    // Strategy 1: Find submit button in the same form
     if (form) {
         // First try explicit submit buttons
         const submitButton = form.querySelector<HTMLButtonElement | HTMLInputElement>(
@@ -170,7 +203,7 @@ const clickSubmitButton = (input: HTMLInputElement): void => {
             return;
         }
 
-        // Check all buttons in form for submit-like text
+        // Check all buttons in form for submit-like text (use MFA-safe check)
         const formButtons = form.querySelectorAll<HTMLButtonElement>("button");
         for (const button of formButtons) {
             if (!button.disabled && isLikelySubmitButton(button)) {
@@ -179,34 +212,67 @@ const clickSubmitButton = (input: HTMLInputElement): void => {
                 return;
             }
         }
+
+        // If we're in a form but all buttons are disabled, wait and retry once
+        // (frameworks may need time to enable the button after input events).
+        const disabledSubmit = form.querySelector<HTMLButtonElement | HTMLInputElement>(
+            'button[type="submit"], input[type="submit"], button:not([type])'
+        );
+        if (disabledSubmit) {
+            console.log("[Ente Auth] Submit button is disabled, waiting to retry...");
+            setTimeout(() => {
+                if (!disabledSubmit.disabled) {
+                    console.log("[Ente Auth] Submit button enabled, clicking now");
+                    disabledSubmit.click();
+                } else {
+                    // Last resort: submit the form directly
+                    console.log("[Ente Auth] Submitting form directly (button still disabled)");
+                    form.requestSubmit?.() ?? form.submit();
+                }
+            }, 300);
+            return;
+        }
+
+        // No buttons at all in the form — submit it directly
+        console.log("[Ente Auth] No buttons in form, submitting directly");
+        form.requestSubmit?.() ?? form.submit();
+        return;
     }
 
-    // Strategy 2: Walk up the DOM to find buttons in parent containers
+    // === Below strategies only apply when the input is NOT inside a <form> ===
+    // (common in SPAs using React/Vue/Angular without real form elements)
+
+    // Strategy 2: Walk up the DOM to find buttons in nearby containers
+    // Limit to 5 levels to avoid reaching page-level navigation
     let container: HTMLElement | null = input.parentElement;
     const checkedContainers = new Set<HTMLElement>();
 
-    // Walk up to 10 levels looking for buttons
-    for (let i = 0; i < 10 && container; i++) {
+    for (let i = 0; i < 5 && container; i++) {
         if (checkedContainers.has(container)) {
             container = container.parentElement;
             continue;
         }
         checkedContainers.add(container);
 
-        // Look for buttons and button-like elements
+        // Skip if we've reached a page-level container (header, nav, etc.)
+        const tag = container.tagName.toLowerCase();
+        if (tag === "header" || tag === "nav" || tag === "aside") {
+            break;
+        }
+
         const clickables = container.querySelectorAll<HTMLElement>(
-            'button, input[type="submit"], input[type="button"], a[role="button"], [role="button"]'
+            'button, input[type="submit"], input[type="button"], [role="button"]'
         );
 
         for (const element of clickables) {
-            // Skip disabled elements
             if (element.hasAttribute("disabled") ||
                 element.getAttribute("aria-disabled") === "true") {
                 continue;
             }
 
-            if (isLikelySubmitButton(element)) {
-                console.log("[Ente Auth] Clicking button:", element.textContent?.trim());
+            // Use MFA-safe check to avoid clicking "Sign In" nav buttons
+            if (isMFASubmitButton(element)) {
+                console.log("[Ente Auth] Clicking nearby button:", element.textContent?.trim());
                 element.click();
                 return;
             }
@@ -215,35 +281,27 @@ const clickSubmitButton = (input: HTMLInputElement): void => {
         container = container.parentElement;
     }
 
-    // Strategy 3: Look for any visible primary-looking button on the page
+    // Strategy 3 (conservative): Only look for buttons that are clearly MFA
+    // submit actions — skip login/sign-in buttons entirely.
     const allButtons = document.querySelectorAll<HTMLElement>(
-        'button, input[type="submit"], a[role="button"], [role="button"]'
+        'button, input[type="submit"], [role="button"]'
     );
 
     for (const button of allButtons) {
-        // Skip hidden or disabled buttons
         if (button.hasAttribute("disabled") ||
             button.getAttribute("aria-disabled") === "true" ||
             button.offsetParent === null) {
             continue;
         }
 
-        if (isLikelySubmitButton(button)) {
-            // Make sure it's visible in the viewport
+        if (isMFASubmitButton(button)) {
             const rect = button.getBoundingClientRect();
             if (rect.width > 0 && rect.height > 0) {
-                console.log("[Ente Auth] Clicking visible submit button:", button.textContent?.trim());
+                console.log("[Ente Auth] Clicking visible MFA submit button:", button.textContent?.trim());
                 button.click();
                 return;
             }
         }
-    }
-
-    // Strategy 4: Submit the form directly if we found one
-    if (form) {
-        console.log("[Ente Auth] Submitting form directly");
-        form.requestSubmit();
-        return;
     }
 
     console.log("[Ente Auth] No submit button found");
