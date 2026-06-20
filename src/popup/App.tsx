@@ -56,7 +56,7 @@ export const App: React.FC = () => {
     const [codes, setCodes] = useState<Code[]>([]);
     const [filteredCodes, setFilteredCodes] = useState<Code[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
-    const [showSearch, setShowSearch] = useState(false);
+    const [showSearch, setShowSearch] = useState(true);
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [sortOrder, setSortOrderState] = useState<"issuer" | "account" | "recent">("issuer");
     const setSortOrder = (order: "issuer" | "account" | "recent") => {
@@ -383,11 +383,54 @@ export const App: React.FC = () => {
         }, 5 * 60 * 1000);
     };
 
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    // Auto-focus search input when codes view is shown
+    useEffect(() => {
+        if (view === "codes" && searchInputRef.current) {
+            searchInputRef.current.focus();
+        }
+    }, [view]);
+
+    // Capture keyboard input globally to redirect to search
+    useEffect(() => {
+        if (view !== "codes") return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ignore if already focused on an input, or if modifier keys are pressed
+            if (
+                e.target instanceof HTMLInputElement ||
+                e.target instanceof HTMLTextAreaElement ||
+                e.ctrlKey || e.metaKey || e.altKey
+            ) {
+                return;
+            }
+
+            // For printable characters, focus the search input
+            if (e.key.length === 1) {
+                if (!showSearch) {
+                    setShowSearch(true);
+                }
+                searchInputRef.current?.focus();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [view, showSearch]);
+
     // Toggle search
     const toggleSearch = () => {
-        setShowSearch(!showSearch);
-        if (showSearch) {
+        if (showSearch && searchQuery) {
+            // If search is visible with text, clear the text
             setSearchQuery("");
+        } else if (showSearch && !searchQuery) {
+            // If search is visible with no text, hide it
+            setShowSearch(false);
+        } else {
+            // If search is hidden, show it and focus
+            setShowSearch(true);
+            setTimeout(() => searchInputRef.current?.focus(), 0);
         }
     };
 
@@ -884,6 +927,7 @@ export const App: React.FC = () => {
             {showSearch && (
                 <div className="search-container">
                     <input
+                        ref={searchInputRef}
                         type="text"
                         className="search-input"
                         placeholder="Search codes..."
