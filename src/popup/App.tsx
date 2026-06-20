@@ -384,6 +384,26 @@ export const App: React.FC = () => {
     };
 
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const [copyToast, setCopyToast] = useState<string | null>(null);
+    const autoCopyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const lastAutoCopiedRef = useRef<string | null>(null);
+
+    // Helper: copy OTP of the first filtered code and show toast
+    const copyFirstResult = useCallback(async (source: "enter" | "auto") => {
+        if (filteredCodes.length === 0) return;
+        const code = filteredCodes[0];
+        const otpData = otps.get(code.id);
+        if (!otpData?.otp) return;
+
+        try {
+            await navigator.clipboard.writeText(otpData.otp);
+            const label = code.issuer + (code.account ? ` (${code.account})` : "");
+            setCopyToast(source === "auto" ? `Auto copied: ${label}` : `Copied: ${label}`);
+            setTimeout(() => setCopyToast(null), 1500);
+        } catch (e) {
+            console.error("Failed to copy:", e);
+        }
+    }, [filteredCodes, otps]);
 
     // Auto-focus search input when codes view is shown
     useEffect(() => {
@@ -391,6 +411,45 @@ export const App: React.FC = () => {
             searchInputRef.current.focus();
         }
     }, [view]);
+
+    // Auto-copy when single result after 500ms idle (only when search has text)
+    useEffect(() => {
+        // Clear previous timer
+        if (autoCopyTimerRef.current) {
+            clearTimeout(autoCopyTimerRef.current);
+            autoCopyTimerRef.current = null;
+        }
+
+        // Only trigger when: searching, exactly 1 result, and has a valid OTP
+        if (
+            view !== "codes" ||
+            !searchQuery.trim() ||
+            filteredCodes.length !== 1
+        ) {
+            lastAutoCopiedRef.current = null;
+            return;
+        }
+
+        const code = filteredCodes[0];
+        const otpData = otps.get(code.id);
+        if (!otpData?.otp) return;
+
+        // Don't re-copy the same code+otp (avoids repeated copies on OTP tick)
+        const copyKey = `${code.id}:${otpData.otp}`;
+        if (lastAutoCopiedRef.current === copyKey) return;
+
+        autoCopyTimerRef.current = setTimeout(() => {
+            lastAutoCopiedRef.current = copyKey;
+            copyFirstResult("auto");
+        }, 500);
+
+        return () => {
+            if (autoCopyTimerRef.current) {
+                clearTimeout(autoCopyTimerRef.current);
+                autoCopyTimerRef.current = null;
+            }
+        };
+    }, [view, searchQuery, filteredCodes, otps, copyFirstResult]);
 
     // Capture keyboard input globally to redirect to search
     useEffect(() => {
@@ -933,6 +992,12 @@ export const App: React.FC = () => {
                         placeholder="Search codes..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                copyFirstResult("enter");
+                            }
+                        }}
                         autoFocus
                     />
                 </div>
@@ -1093,6 +1158,11 @@ export const App: React.FC = () => {
                     <span>{scanError}</span>
                     <button onClick={() => setScanError(null)}>×</button>
                 </div>
+            )}
+
+            {/* Copy success toast */}
+            {copyToast && (
+                <div className="copy-toast">{copyToast}</div>
             )}
 
             {/* Delete confirmation modal */}
