@@ -15,7 +15,7 @@ import { settingsStorage, authStorage, customMappingsStorage, usageStatsStorage 
 import { getCodes, getTimeOffset, syncCodes, createCode, updateCode, deleteCode } from "./sync";
 import { scanQRFromPage } from "./qr-scanner";
 
-const SYNC_ALARM_NAME = "ente-auth-sync";
+const SYNC_ALARM_NAME = "authvault-sync";
 
 // Register message listener immediately (synchronously) so it's available
 // as soon as the service worker starts. This prevents "Receiving end does not exist"
@@ -34,7 +34,7 @@ onMessage((message, sender, sendResponse) => {
  * Initialize the background script (async tasks like alarms).
  */
 const init = async () => {
-    console.log("Ente Auth extension background script initialized");
+    console.log("AuthVault background script initialized");
 
     // Set up periodic sync alarm and configure API URL
     const settings = await settingsStorage.getSettings();

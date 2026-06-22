@@ -1,8 +1,8 @@
 {
-    "name": "auth-extension",
+    "name": "authvault",
     "version": "0.4.1",
     "private": true,
-    "description": "Ente Auth browser extension for secure 2FA autofill",
+    "description": "AuthVault - Secure 2FA autofill powered by your Ente Auth vault",
     "scripts": {
         "build": "npm run build:chrome && npm run build:firefox",
         "build:chrome": "cross-env BROWSER=chrome webpack --config webpack.config.js",
@@ -38,6 +38,7 @@
         "css-loader": "^7.1.2",
         "html-webpack-plugin": "^5.6.3",
         "mini-css-extract-plugin": "^2.9.2",
+        "sharp": "^0.35.2",
         "style-loader": "^4.0.0",
         "ts-loader": "^9.5.1",
         "typescript": "^5.8.3",

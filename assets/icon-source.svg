@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#065F46"/>
+      <stop offset="100%" style="stop-color:#064E3B"/>
+    </linearGradient>
+    <linearGradient id="lock" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669"/>
+      <stop offset="100%" style="stop-color:#10B981"/>
+    </linearGradient>
+  </defs>
+  <!-- Background rounded square -->
+  <rect x="0" y="0" width="128" height="128" rx="28" fill="url(#bg)"/>
+  <!-- Lock body -->
+  <rect x="34" y="58" width="60" height="48" rx="12" fill="url(#lock)"/>
+  <!-- Lock shackle -->
+  <path d="M46 58 L46 44 C46 32 54 24 64 24 C74 24 82 32 82 44 L82 58" fill="none" stroke="url(#lock)" stroke-width="8" stroke-linecap="round"/>
+  <!-- Circuit dots -->
+  <circle cx="52" cy="82" r="4" fill="#fff" opacity="0.95"/>
+  <circle cx="64" cy="82" r="4" fill="#fff" opacity="0.95"/>
+  <circle cx="76" cy="82" r="4" fill="#fff" opacity="0.95"/>
+  <!-- Circuit lines -->
+  <line x1="52" y1="86" x2="52" y2="96" stroke="#fff" stroke-width="2.5" opacity="0.7" stroke-linecap="round"/>
+  <line x1="64" y1="86" x2="64" y2="93" stroke="#fff" stroke-width="2.5" opacity="0.7" stroke-linecap="round"/>
+  <line x1="76" y1="86" x2="76" y2="96" stroke="#fff" stroke-width="2.5" opacity="0.7" stroke-linecap="round"/>
+</svg>

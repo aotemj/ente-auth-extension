@@ -1,6 +1,6 @@
 /**
- * Theme CSS variables for Ente Auth Extension.
- * Matches the Ente Auth mobile app color scheme.
+ * Theme CSS variables for AuthVault.
+ * Emerald Green color scheme.
  */
 
 /* Dark theme (default) */
@@ -18,18 +18,18 @@
     --stroke: rgba(255, 255, 255, 0.12);
 
     /* Fixed colors (both themes) */
-    --accent-purple: #8F33D6;
-    --accent-purple-hover: #9610D6;
+    --accent-purple: #059669;
+    --accent-purple-hover: #047857;
     --success-green: #1DB954;
     --warning-yellow: #FFC247;
     --error-red: #F53434;
 
-    /* FAB colors - matches Ente Auth app */
+    /* FAB colors */
     --fab-background: #FFFFFF;
     --fab-foreground: #282828;
 
     /* Pin indicator background */
-    --pin-bg: #390c4f;
+    --pin-bg: #064E3B;
 }
 
 /* Light theme */
@@ -46,16 +46,16 @@
     --stroke: rgba(0, 0, 0, 0.12);
 
     /* Fixed colors remain the same */
-    --accent-purple: #8F33D6;
-    --accent-purple-hover: #7A2BB8;
+    --accent-purple: #059669;
+    --accent-purple-hover: #047857;
     --success-green: #1DB954;
     --warning-yellow: #FFC247;
     --error-red: #F53434;
 
-    /* FAB colors - matches Ente Auth app */
+    /* FAB colors */
     --fab-background: #282828;
     --fab-foreground: #FFFFFF;
 
     /* Pin indicator background */
-    --pin-bg: #f9ecff;
+    --pin-bg: #ecfdf5;
 }

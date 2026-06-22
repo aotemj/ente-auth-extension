@@ -42,7 +42,7 @@ type DropdownView = "matches" | "search" | "confirm";
 interface DropdownProps {
     matches: DomainMatch[];
     timeOffset: number;
-    onFill: (code: string) => void;
+    onFill: (code: string, isManual?: boolean) => void;
     onClose: () => void;
     theme: ResolvedTheme;
     domain: string;
@@ -150,7 +150,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             setSelectedCode(code);
             setView("confirm");
         } else {
-            onFill(otp);
+            onFill(otp, true);
         }
     }, [matches.length, onFill, otps]);
 
@@ -172,16 +172,16 @@ const Dropdown: React.FC<DropdownProps> = ({
                 });
                 setSaved(true);
                 setTimeout(() => {
-                    onFill(otp);
+                    onFill(otp, true);
                 }, 500);
             } catch (e) {
                 console.error("Failed to save mapping:", e);
-                onFill(otp);
+                onFill(otp, true);
             } finally {
                 setSaving(false);
             }
         } else {
-            onFill(otp);
+            onFill(otp, true);
         }
     }, [selectedCode, otps, timeOffset, domain, onFill]);
 
@@ -390,7 +390,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                                 fill="white"
                             />
                         </svg>
-                        <span style={styles.headerText}>Ente Auth Extension</span>
+                        <span style={styles.headerText}>AuthVault</span>
                     </div>
                     <div style={styles.savedMessage}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -562,7 +562,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                         fill="white"
                     />
                 </svg>
-                <span style={styles.headerText}>Ente Auth Extension</span>
+                <span style={styles.headerText}>AuthVault</span>
             </div>
             <div style={styles.list}>
                 {matches.length === 0 ? (
@@ -576,7 +576,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                                 e.preventDefault();
                                 e.stopPropagation();
                                 const otp = otps.get(code.id) || "";
-                                onFill(otp);
+                                onFill(otp, true);
                             }}
                             onMouseEnter={(e) => {
                                 (e.currentTarget as HTMLDivElement).style.backgroundColor = colors.backgroundHover;
@@ -780,7 +780,7 @@ const AuthPromptDropdown: React.FC<AuthPromptDropdownProps> = ({
                     />
                 </svg>
                 <span style={styles.headerText}>
-                    {needsLogin ? "Ente Auth Extension" : "Vault Locked"}
+                    {needsLogin ? "AuthVault" : "Vault Locked"}
                 </span>
             </div>
             {needsLogin ? (
@@ -837,7 +837,7 @@ const AuthPromptDropdown: React.FC<AuthPromptDropdownProps> = ({
 interface AutofillIconProps {
     matches: DomainMatch[];
     timeOffset: number;
-    onFill: (code: string) => void;
+    onFill: (code: string, isManual?: boolean) => void;
     inputElement: HTMLInputElement;
     autoFillSingleMatch: boolean;
     domain: string;
@@ -888,16 +888,16 @@ const AutofillIcon: React.FC<AutofillIconProps> = ({
         setIsOpen(!isOpen);
     };
 
-    const handleFill = (code: string) => {
-        onFill(code);
+    const handleFill = (code: string, isManual?: boolean) => {
+        onFill(code, isManual);
         setIsOpen(false);
     };
 
     const iconTitle = isAuthenticated
-        ? "Ente Auth Extension - Click to autofill"
+        ? "AuthVault - Click to autofill"
         : needsLogin
-            ? "Ente Auth Extension - Click to log in"
-            : "Ente Auth Extension - Click to unlock";
+            ? "AuthVault - Click to log in"
+            : "AuthVault - Click to unlock";
 
     const styles: Record<string, React.CSSProperties> = {
         container: {
@@ -945,7 +945,7 @@ const AutofillIcon: React.FC<AutofillIconProps> = ({
                 {/* Use the same PNG icon as extension toolbar */}
                 <img
                     src={browser.runtime.getURL("assets/icons/icon16.png")}
-                    alt="Ente Auth Extension"
+                    alt="AuthVault"
                     width="20"
                     height="20"
                     style={styles.iconImage}
@@ -1017,7 +1017,7 @@ const positionIcon = (
 export const showPopup = (
     matches: DomainMatch[],
     timeOffset: number,
-    onFill: (code: string) => void,
+    onFill: (code: string, isManual?: boolean) => void,
     inputElement?: HTMLInputElement,
     autoFillSingleMatch = true,
     authState?: AuthState,

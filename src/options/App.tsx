@@ -238,7 +238,7 @@ export const App: React.FC = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "ente-auth-custom-mappings.json";
+        a.download = "authvault-custom-mappings.json";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -359,7 +359,7 @@ export const App: React.FC = () => {
         <div className="options-container">
             <div className="options-header">
                 <Logo />
-                <h1>Ente Auth Extension Settings</h1>
+                <h1>AuthVault Settings</h1>
             </div>
 
             <div className="options-content">
@@ -766,9 +766,9 @@ export const App: React.FC = () => {
 
             <div className="options-footer">
                 <p>
-                    Ente Auth Extension v{getExtensionVersion()} •{" "}
+                    AuthVault v{getExtensionVersion()} •{" "}
                     <a
-                        href="https://github.com/aheimowitz/ente-auth-extension"
+                        href="https://github.com/aotemj/ente-auth-extension"
                         target="_blank"
                         rel="noopener noreferrer"
                     >

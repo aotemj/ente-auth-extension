@@ -830,9 +830,9 @@ export const App: React.FC = () => {
                     <div className="auth-logo">
                         <Logo />
                     </div>
-                    <div className="auth-title">Ente Auth Extension</div>
+                    <div className="auth-title">AuthVault</div>
                     <div className="auth-description">
-                        Secure 2FA autofill from your Ente Auth vault.
+                        Secure 2FA autofill powered by your Ente Auth vault.
                     </div>
                     <div className="auth-form">
                         <button
@@ -960,7 +960,7 @@ export const App: React.FC = () => {
                         <SettingsIcon />
                     </button>
                 </div>
-                <span className="header-title">Auth</span>
+                <span className="header-title">AuthVault</span>
                 <div className="header-right">
                     <button
                         className="icon-button"

@@ -4,9 +4,39 @@
 import type { MFAFieldDetection } from "@shared/types";
 
 /**
- * Fill an MFA code into the detected field(s) and optionally submit.
+ * Track which elements have already been auto-filled to prevent repeated
+ * submissions when the popup component is recreated (e.g. on storage changes).
  */
-export const fillCode = (detection: MFAFieldDetection, code: string, autoSubmit = true): void => {
+const autoFilledElements = new WeakSet<HTMLInputElement>();
+
+/**
+ * Check if an element has already been auto-filled.
+ */
+export const hasBeenAutoFilled = (element: HTMLInputElement): boolean => {
+    return autoFilledElements.has(element);
+};
+
+/**
+ * Mark an element as having been auto-filled.
+ */
+export const markAutoFilled = (element: HTMLInputElement): void => {
+    autoFilledElements.add(element);
+};
+
+/**
+ * Fill an MFA code into the detected field(s) and optionally submit.
+ * @param force - If true, bypass the auto-fill guard (used for user-initiated fills).
+ */
+export const fillCode = (detection: MFAFieldDetection, code: string, autoSubmit = true, force = false): void => {
+    // Guard: don't auto-fill+submit if this element was already handled.
+    // This prevents repeated submissions when the popup component is recreated
+    // (e.g. on storage changes triggering refreshIcon). User-initiated fills
+    // (force=true) bypass this guard.
+    if (!force && autoFilledElements.has(detection.element)) {
+        return;
+    }
+    autoFilledElements.add(detection.element);
+
     if (detection.type === "split" && detection.splitInputs) {
         fillSplitInputs(detection.splitInputs, code);
     } else {
@@ -147,6 +177,18 @@ const isLikelySubmitButton = (element: HTMLElement): boolean => {
 };
 
 /**
+ * Submit a form safely, preferring requestSubmit (fires submit event / runs
+ * validation) with a fallback to form.submit() for older browsers.
+ */
+const submitForm = (form: HTMLFormElement): void => {
+    if (typeof form.requestSubmit === "function") {
+        form.requestSubmit();
+    } else {
+        form.submit();
+    }
+};
+
+/**
  * Keywords that indicate a LOGIN/sign-in action rather than an MFA verification.
  * These should NOT be matched when auto-submitting an MFA code, because clicking
  * a "Sign In" button/link in the page header would navigate away from the 2FA
@@ -190,7 +232,7 @@ const clickSubmitButton = (input: HTMLInputElement): void => {
             'button[type="submit"], input[type="submit"]'
         );
         if (submitButton && !submitButton.disabled) {
-            console.log("[Ente Auth] Clicking submit button in form");
+            console.log("[AuthVault] Clicking submit button in form");
             submitButton.click();
             return;
         }
@@ -198,7 +240,7 @@ const clickSubmitButton = (input: HTMLInputElement): void => {
         // Then try buttons without type (default to submit in forms)
         const defaultButton = form.querySelector<HTMLButtonElement>('button:not([type])');
         if (defaultButton && !defaultButton.disabled) {
-            console.log("[Ente Auth] Clicking default button in form");
+            console.log("[AuthVault] Clicking default button in form");
             defaultButton.click();
             return;
         }
@@ -207,7 +249,7 @@ const clickSubmitButton = (input: HTMLInputElement): void => {
         const formButtons = form.querySelectorAll<HTMLButtonElement>("button");
         for (const button of formButtons) {
             if (!button.disabled && isLikelySubmitButton(button)) {
-                console.log("[Ente Auth] Clicking likely submit button in form:", button.textContent?.trim());
+                console.log("[AuthVault] Clicking likely submit button in form:", button.textContent?.trim());
                 button.click();
                 return;
             }
@@ -219,15 +261,15 @@ const clickSubmitButton = (input: HTMLInputElement): void => {
             'button[type="submit"], input[type="submit"], button:not([type])'
         );
         if (disabledSubmit) {
-            console.log("[Ente Auth] Submit button is disabled, waiting to retry...");
+            console.log("[AuthVault] Submit button is disabled, waiting to retry...");
             setTimeout(() => {
                 if (!disabledSubmit.disabled) {
-                    console.log("[Ente Auth] Submit button enabled, clicking now");
+                    console.log("[AuthVault] Submit button enabled, clicking now");
                     disabledSubmit.click();
                 } else {
                     // Last resort: submit the form directly
                     console.log("[Ente Auth] Submitting form directly (button still disabled)");
-                    form.requestSubmit?.() ?? form.submit();
+                    submitForm(form);
                 }
             }, 300);
             return;
@@ -235,7 +277,7 @@ const clickSubmitButton = (input: HTMLInputElement): void => {
 
         // No buttons at all in the form — submit it directly
         console.log("[Ente Auth] No buttons in form, submitting directly");
-        form.requestSubmit?.() ?? form.submit();
+        submitForm(form);
         return;
     }
 
