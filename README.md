@@ -1,36 +1,45 @@
-# Ente Auth Browser Extension
+# AuthVault 2FA - OTP Autofill for Ente Auth
 
-A browser extension for Ente Auth that provides secure 2FA code autofill.
+A browser extension that brings your Ente Auth 2FA codes directly into your browser with smart autofill.
 
-> **Disclaimer**: This is an unofficial, community-developed browser extension. It is **not** developed, maintained, or officially supported by the Ente team. However, the Ente team has been made aware of this extension, and I am happy to collaborate with them when the time is right. Use at your own discretion.
+> **Note**: This is a modified fork of [ente-auth-extension](https://github.com/aheimowitz/ente-auth-extension) by aheimowitz, redistributed under AGPL-3.0. It is not officially affiliated with the Ente team.
 
 ## Features
 
 - **View and copy** your 2FA codes from the browser toolbar
+- **Autofill** - automatic detection of MFA input fields on websites
+- **Smart matching** - domain matching to suggest relevant codes
+- **One-click fill** with optional auto-submit
 - **Create new codes** manually or by scanning QR codes from the current page
 - **Edit and delete** existing codes
 - **Organize with tags** - create, rename, delete, and filter by tags
 - **Pin codes** to keep your most-used codes at the top
-- **Autofill** - automatic detection of MFA input fields on websites
-- **Smart matching** - domain matching to suggest relevant codes
-- **One-click fill** with optional auto-submit
+- **Sort by** issuer, recently used, or most used (usage stats synced across devices)
+- **Custom domain mappings** with import/export support
 - **Syncs** with your Ente Auth account
 - **Passkey support** - authenticate with passkeys via Ente Accounts
 - **Self-hosted support** - configure a custom server endpoint
-- **Cross-browser** - works with Chrome and Firefox
+- **Cross-browser** - works with Chrome, Edge, and Firefox
 
 ## Installation
 
-### From Release (Recommended)
+### From Edge Add-ons Store
 
-1. Download the latest release for your browser from the [Releases page](../../releases):
-   - **Chrome**: `ente-auth-chrome-x.x.x.zip`
-   - **Firefox**: `ente-auth-firefox-x.x.x.xpi` (recommended) or `.zip`
+Search for **AuthVault 2FA** in the [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/) or install directly from the store listing page.
+
+> Edge extensions also work in Chrome if you enable "Allow extensions from other stores" in `chrome://extensions`.
+
+### From Release (Manual Install)
+
+1. Download the latest release from the [Releases page](../../releases):
+   - **Chrome / Edge**: `authvault-chrome-x.x.x.zip`
+   - **Firefox**: `authvault-firefox-x.x.x.xpi` (recommended) or `.zip`
+
 2. Install the extension:
 
-   **Chrome:**
+   **Chrome / Edge:**
    1. Extract the zip file
-   2. Open `chrome://extensions`
+   2. Open `chrome://extensions` (Chrome) or `edge://extensions` (Edge)
    3. Enable "Developer mode" (toggle in top right)
    4. Click "Load unpacked"
    5. Select the extracted folder
@@ -57,7 +66,7 @@ A browser extension for Ente Auth that provides secure 2FA code autofill.
    npm run build:chrome
    npm run build:firefox
    ```
-4. Load the extension using the steps above, selecting the `dist-chrome` or `dist-firefox` directory
+4. Load the extension using the manual install steps above, selecting the `dist-chrome` or `dist-firefox` directory
 
 ## Development
 
@@ -65,8 +74,6 @@ Start the development build with file watching:
 
 ```sh
 npm run dev
-# or
-yarn dev
 
 # Watch a specific browser
 npm run dev:chrome
@@ -78,8 +85,8 @@ This will rebuild the extension automatically when you make changes.
 ## Directory Structure
 
 ```
-ente-auth-extension/
-├── assets/            # Extension icons
+authvault/
+├── assets/            # Extension icons and store assets
 ├── manifests/         # Browser-specific manifest files
 ├── src/
 │   ├── background/    # Service worker (Chrome) / background script (Firefox)
@@ -88,7 +95,7 @@ ente-auth-extension/
 │   ├── options/       # Extension options page
 │   ├── popup/         # Browser toolbar popup UI
 │   └── shared/        # Shared utilities (crypto, OTP, API, SRP)
-└── dist-*/            # Build outputs (gitignored)
+└── dist-*/            # Build outputs
 ```
 
 ## Authentication
@@ -100,9 +107,7 @@ The extension has a built-in login page that supports:
 - **Passkeys** — redirects to Ente Accounts for WebAuthn verification, then polls for the result
 - **TOTP two-factor** — standard authenticator app codes
 
-For self-hosted Ente instances, you can configure a custom server endpoint on
-the login page or in the extension options. Once authenticated, your 2FA codes
-are synced and available from the toolbar popup.
+For self-hosted Ente instances, you can configure a custom server endpoint on the login page or in the extension options.
 
 ## How Autofill Works
 
@@ -112,21 +117,21 @@ When you visit a website with an MFA input field:
 2. If matching codes are found, a popup appears offering to fill them
 3. Clicking "Fill" inserts the code and optionally submits the form
 
-The extension matches codes to websites using the issuer name and any domain
-hints stored in your 2FA entries.
+The extension matches codes to websites using the issuer name, domain hints, and custom domain mappings.
+
+## Privacy
+
+See [PRIVACY.md](PRIVACY.md) for our privacy policy. In short: your codes stay encrypted and are only decrypted locally. No data is sent to third-party servers.
 
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## Contact
-
-Have questions, feedback, or want to get involved? Reach out to **iPcGuy** on the [Ente Discord server](https://discord.gg/z2YVKkycX3).
-
 ## License
 
-This project is based on work from the [Ente](https://github.com/ente-io/ente) codebase, which is licensed under AGPL-3.0.
+AGPL-3.0. Based on work from the [Ente](https://github.com/ente-io/ente) ecosystem.
 
 ## Acknowledgments
 
-- [Ente](https://ente.io) for the excellent Ente Auth app and open source ecosystem
+- [Ente](https://ente.io) for the Ente Auth app and open source ecosystem
+- [aheimowitz](https://github.com/aheimowitz/ente-auth-extension) for the original browser extension
