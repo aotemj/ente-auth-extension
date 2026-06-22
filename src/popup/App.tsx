@@ -6,7 +6,7 @@ import { browser, sendMessage, openOptionsPage } from "@shared/browser";
 import { searchCodes } from "@shared/domain-matcher";
 import { generateOTPs } from "@shared/otp";
 import { useTheme } from "@shared/useTheme";
-import type { AuthState, Code, CodeFormData, ParsedQRCode } from "@shared/types";
+import type { AuthState, Code, CodeFormData, CodeUsageStats, ParsedQRCode } from "@shared/types";
 import { CodeCard } from "./CodeCard";
 import { CodeForm } from "./CodeForm";
 
@@ -58,8 +58,8 @@ export const App: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [showSearch, setShowSearch] = useState(true);
     const [showSortMenu, setShowSortMenu] = useState(false);
-    const [sortOrder, setSortOrderState] = useState<"issuer" | "account" | "recent">("issuer");
-    const setSortOrder = (order: "issuer" | "account" | "recent") => {
+    const [sortOrder, setSortOrderState] = useState<"issuer" | "account" | "recent" | "mostUsed">("issuer");
+    const setSortOrder = (order: "issuer" | "account" | "recent" | "mostUsed") => {
         setSortOrderState(order);
         sendMessage({ type: "SET_SETTINGS", settings: { sortOrder: order } });
     };
@@ -69,6 +69,7 @@ export const App: React.FC = () => {
     const [syncing, setSyncing] = useState(false);
     const [loggingIn, setLoggingIn] = useState(false);
     const [otps, setOtps] = useState<Map<string, { otp: string; nextOtp: string }>>(new Map());
+    const [usageStats, setUsageStats] = useState<CodeUsageStats>({});
     const [showFabMenu, setShowFabMenu] = useState(false);
     const [editingCode, setEditingCode] = useState<Code | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<Code | null>(null);
@@ -117,10 +118,19 @@ export const App: React.FC = () => {
             // Load saved sort order from settings
             const settingsRes = await sendMessage<{
                 success: boolean;
-                data?: { sortOrder?: "issuer" | "account" | "recent" };
+                data?: { sortOrder?: "issuer" | "account" | "recent" | "mostUsed" };
             }>({ type: "GET_SETTINGS" });
             if (settingsRes.success && settingsRes.data?.sortOrder) {
-                setSortOrder(settingsRes.data.sortOrder);
+                setSortOrderState(settingsRes.data.sortOrder);
+            }
+
+            // Load usage stats for sorting
+            const usageRes = await sendMessage<{
+                success: boolean;
+                data?: CodeUsageStats;
+            }>({ type: "GET_USAGE_STATS" });
+            if (usageRes.success && usageRes.data) {
+                setUsageStats(usageRes.data);
             }
 
             // Step 1: Try to load cached codes immediately (no service worker needed)
@@ -272,16 +282,23 @@ export const App: React.FC = () => {
                     return a.issuer.localeCompare(b.issuer);
                 case "account":
                     return (a.account || "").localeCompare(b.account || "");
-                case "recent":
-                    // Most recently used first (using updatedAt or id as fallback)
-                    return (b.id || "").localeCompare(a.id || "");
+                case "recent": {
+                    const aLastUsed = usageStats[a.id]?.lastUsed || 0;
+                    const bLastUsed = usageStats[b.id]?.lastUsed || 0;
+                    return bLastUsed - aLastUsed;
+                }
+                case "mostUsed": {
+                    const aCount = usageStats[a.id]?.useCount || 0;
+                    const bCount = usageStats[b.id]?.useCount || 0;
+                    return bCount - aCount;
+                }
                 default:
                     return 0;
             }
         });
 
         setFilteredCodes(result);
-    }, [searchQuery, codes, sortOrder, selectedTag]);
+    }, [searchQuery, codes, sortOrder, selectedTag, usageStats]);
 
     // Handle unlock
     const handleUnlock = async () => {
@@ -383,6 +400,18 @@ export const App: React.FC = () => {
         }, 5 * 60 * 1000);
     };
 
+    // Handle code usage tracking
+    const handleCodeUse = useCallback((code: Code) => {
+        sendMessage({ type: "RECORD_CODE_USAGE", codeId: code.id });
+        setUsageStats((prev) => ({
+            ...prev,
+            [code.id]: {
+                lastUsed: Date.now(),
+                useCount: (prev[code.id]?.useCount || 0) + 1,
+            },
+        }));
+    }, []);
+
     const searchInputRef = useRef<HTMLInputElement>(null);
     const [copyToast, setCopyToast] = useState<string | null>(null);
     const autoCopyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -400,10 +429,11 @@ export const App: React.FC = () => {
             const label = code.issuer + (code.account ? ` (${code.account})` : "");
             setCopyToast(source === "auto" ? `Auto copied: ${label}` : `Copied: ${label}`);
             setTimeout(() => setCopyToast(null), 1500);
+            handleCodeUse(code);
         } catch (e) {
             console.error("Failed to copy:", e);
         }
-    }, [filteredCodes, otps]);
+    }, [filteredCodes, otps, handleCodeUse]);
 
     // Auto-focus search input when codes view is shown
     useEffect(() => {
@@ -970,6 +1000,13 @@ export const App: React.FC = () => {
                                     Recently used
                                     {sortOrder === "recent" && <CheckIcon />}
                                 </div>
+                                <div
+                                    className={`sort-option ${sortOrder === "mostUsed" ? "active" : ""}`}
+                                    onClick={() => { setSortOrder("mostUsed"); setShowSortMenu(false); }}
+                                >
+                                    Most used
+                                    {sortOrder === "mostUsed" && <CheckIcon />}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -1116,6 +1153,8 @@ export const App: React.FC = () => {
                                     nextOtp={otpData.nextOtp}
                                     onEdit={handleEditCode}
                                     onPin={handlePinCode}
+                                    onUse={handleCodeUse}
+                                    useCount={usageStats[code.id]?.useCount}
                                 />
                             </div>
                         );

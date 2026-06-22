@@ -220,6 +220,112 @@ export const App: React.FC = () => {
         }
     };
 
+    // Export custom mappings as JSON file
+    const handleExportMappings = () => {
+        if (customMappings.length === 0) {
+            setError("No custom mappings to export");
+            return;
+        }
+
+        const exportData = customMappings.map(({ domain, issuer }) => ({
+            domain,
+            issuer,
+        }));
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+            type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "ente-auth-custom-mappings.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    // Import custom mappings from JSON file
+    const handleImportMappings = () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json";
+        input.onchange = async (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+
+                // Validate imported data
+                if (!Array.isArray(data)) {
+                    setError("Invalid file format: expected an array of mappings");
+                    return;
+                }
+
+                const validMappings: { domain: string; issuer: string }[] = [];
+                for (const item of data) {
+                    if (
+                        typeof item === "object" &&
+                        item !== null &&
+                        typeof item.domain === "string" &&
+                        typeof item.issuer === "string" &&
+                        item.domain.trim() &&
+                        item.issuer.trim()
+                    ) {
+                        validMappings.push({
+                            domain: item.domain.trim().toLowerCase(),
+                            issuer: item.issuer.trim(),
+                        });
+                    }
+                }
+
+                if (validMappings.length === 0) {
+                    setError("No valid mappings found in the file");
+                    return;
+                }
+
+                const response = await sendMessage<{
+                    success: boolean;
+                    data?: { added: number; updated: number };
+                    error?: string;
+                }>({
+                    type: "IMPORT_CUSTOM_MAPPINGS",
+                    mappings: validMappings,
+                });
+
+                if (response.success) {
+                    // Refresh mappings list
+                    const mappingsResponse = await sendMessage<{
+                        success: boolean;
+                        data?: CustomDomainMapping[];
+                    }>({ type: "GET_CUSTOM_MAPPINGS" });
+
+                    if (mappingsResponse.success && mappingsResponse.data) {
+                        setCustomMappings(mappingsResponse.data);
+                    }
+
+                    const { added = 0, updated = 0 } = response.data || {};
+                    setSaved(true);
+                    setError(null);
+                    // Show a brief success message via the saved indicator
+                    setTimeout(() => setSaved(false), 3000);
+                    console.log(`Imported mappings: ${added} added, ${updated} updated`);
+                } else {
+                    setError(response.error || "Failed to import mappings");
+                }
+            } catch (e) {
+                if (e instanceof SyntaxError) {
+                    setError("Invalid JSON file");
+                } else {
+                    setError(e instanceof Error ? e.message : "Failed to import mappings");
+                }
+            }
+        };
+        input.click();
+    };
+
     // Filter built-in mappings based on search
     const builtInMappings = getBuiltInMappings();
     const filteredBuiltInMappings = useMemo(() => {
@@ -355,7 +461,32 @@ export const App: React.FC = () => {
 
                     {/* Custom Mappings */}
                     <div className="mappings-subsection">
-                        <h3>Custom Mappings</h3>
+                        <div className="mappings-header">
+                            <h3>Custom Mappings</h3>
+                            <div className="mappings-actions">
+                                <button
+                                    className="icon-action-button"
+                                    onClick={handleImportMappings}
+                                    title="Import mappings from JSON file"
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                                    </svg>
+                                    Import
+                                </button>
+                                <button
+                                    className="icon-action-button"
+                                    onClick={handleExportMappings}
+                                    disabled={customMappings.length === 0}
+                                    title="Export mappings as JSON file"
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" />
+                                    </svg>
+                                    Export
+                                </button>
+                            </div>
+                        </div>
 
                         {customMappings.length === 0 && !showAddForm ? (
                             <p className="empty-state">No custom mappings yet.</p>

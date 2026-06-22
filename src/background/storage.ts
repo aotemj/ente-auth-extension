@@ -3,7 +3,7 @@
  * Provides a unified interface for chrome.storage.local and chrome.storage.session.
  */
 import { browser } from "@shared/browser";
-import type { Code, CustomDomainMapping, ExtensionSettings, KeyAttributes } from "@shared/types";
+import type { Code, CodeUsageStats, CustomDomainMapping, ExtensionSettings, KeyAttributes } from "@shared/types";
 
 // Storage keys
 const KEYS = {
@@ -14,6 +14,7 @@ const KEYS = {
     SYNC_TIMESTAMP: "syncTimestamp",
     EMAIL: "email",
     CUSTOM_DOMAIN_MAPPINGS: "customDomainMappings",
+    USAGE_STATS: "usageStats",
     // Master key storage location depends on lockOnBrowserClose setting
     MASTER_KEY: "masterKey",
     MASTER_KEY_SESSION: "masterKeySession",
@@ -314,9 +315,59 @@ export const customMappingsStorage = {
         await syncStore.set(KEYS.CUSTOM_DOMAIN_MAPPINGS, filtered);
     },
 
+    async importMappings(
+        newMappings: Omit<CustomDomainMapping, "createdAt">[]
+    ): Promise<{ added: number; updated: number }> {
+        const existing = await this.getMappings();
+        let added = 0;
+        let updated = 0;
+
+        for (const mapping of newMappings) {
+            const idx = existing.findIndex(
+                (m) => m.domain.toLowerCase() === mapping.domain.toLowerCase()
+            );
+            if (idx >= 0) {
+                // Update existing mapping
+                existing[idx] = { ...mapping, createdAt: Date.now() };
+                updated++;
+            } else {
+                // Add new mapping
+                existing.push({ ...mapping, createdAt: Date.now() });
+                added++;
+            }
+        }
+
+        await syncStore.set(KEYS.CUSTOM_DOMAIN_MAPPINGS, existing);
+        return { added, updated };
+    },
+
     async clearMappings(): Promise<void> {
         await syncStore.remove(KEYS.CUSTOM_DOMAIN_MAPPINGS);
         await localStore.remove(KEYS.CUSTOM_DOMAIN_MAPPINGS);
+    },
+};
+
+/**
+ * Code usage statistics storage (synced across devices).
+ */
+export const usageStatsStorage = {
+    async getStats(): Promise<CodeUsageStats> {
+        const stats = await syncStore.get<CodeUsageStats>(KEYS.USAGE_STATS);
+        return stats || {};
+    },
+
+    async recordUsage(codeId: string): Promise<void> {
+        const stats = await this.getStats();
+        const existing = stats[codeId];
+        stats[codeId] = {
+            lastUsed: Date.now(),
+            useCount: (existing?.useCount || 0) + 1,
+        };
+        await syncStore.set(KEYS.USAGE_STATS, stats);
+    },
+
+    async clearStats(): Promise<void> {
+        await syncStore.remove(KEYS.USAGE_STATS);
     },
 };
 

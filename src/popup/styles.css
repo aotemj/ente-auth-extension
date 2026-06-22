@@ -380,6 +380,14 @@ body {
     color: var(--text-muted);
 }
 
+.code-use-count {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-faint);
+    margin-top: 4px;
+    text-align: right;
+}
+
 /* Copy feedback - toast pill (matches Ente app style) */
 .copied-pill {
     position: absolute;

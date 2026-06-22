@@ -83,7 +83,7 @@ export interface ExtensionSettings {
     /** Custom accounts URL for passkey verification on self-hosted instances. Empty string means use accounts.ente.io. */
     accountsUrl: string;
     /** Sort order for codes list. Default: "issuer" */
-    sortOrder: "issuer" | "account" | "recent";
+    sortOrder: "issuer" | "account" | "recent" | "mostUsed";
 }
 
 /**
@@ -150,6 +150,9 @@ export type ExtensionMessage =
     | { type: "GET_CUSTOM_MAPPINGS" }
     | { type: "ADD_CUSTOM_MAPPING"; mapping: Omit<CustomDomainMapping, "createdAt"> }
     | { type: "DELETE_CUSTOM_MAPPING"; domain: string }
+    | { type: "IMPORT_CUSTOM_MAPPINGS"; mappings: Omit<CustomDomainMapping, "createdAt">[] }
+    | { type: "RECORD_CODE_USAGE"; codeId: string }
+    | { type: "GET_USAGE_STATS" }
     | { type: "CREATE_CODE"; code: CodeFormData }
     | { type: "UPDATE_CODE"; id: string; code: CodeFormData }
     | { type: "DELETE_CODE"; id: string }
@@ -228,6 +231,22 @@ export interface CustomDomainMapping {
     /** Timestamp when the mapping was created, for sorting */
     createdAt: number;
 }
+
+/**
+ * Usage statistics for a single code.
+ */
+export interface CodeUsageEntry {
+    /** Timestamp of the last time this code was used */
+    lastUsed: number;
+    /** Total number of times this code has been used */
+    useCount: number;
+}
+
+/**
+ * Usage statistics for all codes, keyed by code ID.
+ * Stored in sync storage for cross-device synchronization.
+ */
+export type CodeUsageStats = Record<string, CodeUsageEntry>;
 
 /**
  * MFA field detection result.

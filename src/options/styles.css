@@ -293,6 +293,54 @@ body {
     margin-bottom: 12px;
 }
 
+.mappings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.mappings-header h3 {
+    margin-bottom: 0;
+}
+
+.mappings-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.icon-action-button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    background-color: transparent;
+    border: 1px solid var(--stroke);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background-color 0.2s;
+}
+
+.icon-action-button:hover {
+    border-color: var(--accent-purple);
+    color: var(--accent-purple);
+    background-color: var(--fill-faint);
+}
+
+.icon-action-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.icon-action-button:disabled:hover {
+    border-color: var(--stroke);
+    color: var(--text-muted);
+    background-color: transparent;
+}
+
 .mappings-subsection.builtin {
     margin-top: 24px;
     padding-top: 16px;

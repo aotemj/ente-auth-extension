@@ -11,7 +11,7 @@ import type {
     ExtensionResponse,
 } from "@shared/types";
 import { getAuthState, login, lock, logout, unlock } from "./auth";
-import { settingsStorage, authStorage, customMappingsStorage } from "./storage";
+import { settingsStorage, authStorage, customMappingsStorage, usageStatsStorage } from "./storage";
 import { getCodes, getTimeOffset, syncCodes, createCode, updateCode, deleteCode } from "./sync";
 import { scanQRFromPage } from "./qr-scanner";
 
@@ -283,6 +283,45 @@ const handleMessage = async (
                 return {
                     success: false,
                     error: e instanceof Error ? e.message : "Failed to delete mapping",
+                };
+            }
+        }
+
+        case "IMPORT_CUSTOM_MAPPINGS": {
+            try {
+                const result = await customMappingsStorage.importMappings(message.mappings);
+                // Refresh custom mappings in the domain matcher
+                const updatedMappings = await customMappingsStorage.getMappings();
+                setCustomMappings(updatedMappings);
+                return { success: true, data: result };
+            } catch (e) {
+                return {
+                    success: false,
+                    error: e instanceof Error ? e.message : "Failed to import mappings",
+                };
+            }
+        }
+
+        case "RECORD_CODE_USAGE": {
+            try {
+                await usageStatsStorage.recordUsage(message.codeId);
+                return { success: true };
+            } catch (e) {
+                return {
+                    success: false,
+                    error: e instanceof Error ? e.message : "Failed to record usage",
+                };
+            }
+        }
+
+        case "GET_USAGE_STATS": {
+            try {
+                const stats = await usageStatsStorage.getStats();
+                return { success: true, data: stats };
+            } catch (e) {
+                return {
+                    success: false,
+                    error: e instanceof Error ? e.message : "Failed to get usage stats",
                 };
             }
         }

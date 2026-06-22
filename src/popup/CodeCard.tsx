@@ -14,6 +14,8 @@ interface CodeCardProps {
     nextOtp: string;
     onEdit?: (code: Code) => void;
     onPin?: (code: Code) => void;
+    onUse?: (code: Code) => void;
+    useCount?: number;
 }
 
 export const CodeCard: React.FC<CodeCardProps> = ({
@@ -23,6 +25,8 @@ export const CodeCard: React.FC<CodeCardProps> = ({
     nextOtp,
     onEdit,
     onPin,
+    onUse,
+    useCount,
 }) => {
     const [copied, setCopied] = useState(false);
     const progressBarRef = useRef<HTMLDivElement>(null);
@@ -95,6 +99,7 @@ export const CodeCard: React.FC<CodeCardProps> = ({
             await navigator.clipboard.writeText(displayOtp);
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
+            onUse?.(code);
         } catch (error) {
             console.error("Failed to copy:", error);
         }
@@ -130,6 +135,11 @@ export const CodeCard: React.FC<CodeCardProps> = ({
                 <div className="code-right">
                     <div className="code-next-label">next</div>
                     <div className="code-next-otp">{prettyFormatCode(displayNextOtp)}</div>
+                    {useCount !== undefined && useCount > 0 && (
+                        <div className="code-use-count" title={`Used ${useCount} time${useCount > 1 ? "s" : ""}`}>
+                            ×{useCount}
+                        </div>
+                    )}
                 </div>
             </div>
 
