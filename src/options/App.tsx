@@ -4,6 +4,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { browser, sendMessage } from "@shared/browser";
 import { useTheme } from "@shared/useTheme";
+import { CustomSelect } from "./CustomSelect";
 import { getBuiltInMappings } from "@shared/domain-matcher";
 import type { AuthState, Code, CustomDomainMapping, ExtensionSettings, ThemeMode } from "@shared/types";
 
@@ -373,17 +374,15 @@ export const App: React.FC = () => {
                                 Choose your preferred color scheme.
                             </p>
                         </div>
-                        <select
+                        <CustomSelect
                             value={settings.theme}
-                            onChange={(e) =>
-                                handleThemeChange(e.target.value as ThemeMode)
-                            }
-                            className="select-input"
-                        >
-                            <option value="system">System</option>
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
-                        </select>
+                            onChange={(val) => handleThemeChange(val as ThemeMode)}
+                            options={[
+                                { value: "system", label: "System" },
+                                { value: "light", label: "Light" },
+                                { value: "dark", label: "Dark" },
+                            ]}
+                        />
                     </div>
                 </section>
 
@@ -527,18 +526,15 @@ export const App: React.FC = () => {
                                     />
                                 </div>
                                 <div className="form-row">
-                                    <select
+                                    <CustomSelect
                                         value={newMappingIssuer}
-                                        onChange={(e) => setNewMappingIssuer(e.target.value)}
-                                        className="form-select"
-                                    >
-                                        <option value="">Select a code...</option>
-                                        {uniqueIssuers.map((issuer) => (
-                                            <option key={issuer} value={issuer}>
-                                                {issuer}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        onChange={(val) => setNewMappingIssuer(val)}
+                                        placeholder="Select a code..."
+                                        options={uniqueIssuers.map((issuer) => ({
+                                            value: issuer,
+                                            label: issuer,
+                                        }))}
+                                    />
                                 </div>
                                 <div className="form-actions">
                                     <button

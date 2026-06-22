@@ -626,3 +626,113 @@ body {
     max-height: 300px;
     overflow-y: auto;
 }
+
+/* Custom Select Component */
+.custom-select {
+    position: relative;
+    display: inline-block;
+    min-width: 120px;
+}
+
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: var(--background-paper);
+    border: 1px solid var(--stroke);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.custom-select-trigger:hover {
+    border-color: var(--accent-purple);
+}
+
+.custom-select.open .custom-select-trigger {
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+}
+
+.custom-select-value {
+    flex: 1;
+    text-align: left;
+}
+
+.custom-select-value.placeholder {
+    color: var(--text-faint);
+}
+
+.custom-select-arrow {
+    flex-shrink: 0;
+    color: var(--text-faint);
+    transition: transform 0.2s;
+}
+
+.custom-select.open .custom-select-arrow {
+    transform: rotate(180deg);
+}
+
+.custom-select-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    min-width: 100%;
+    background-color: var(--background-paper);
+    border: 1px solid var(--stroke);
+    border-radius: 8px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    z-index: 1000;
+    padding: 4px;
+    animation: selectSlideDown 0.15s ease-out;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+@keyframes selectSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.custom-select-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.custom-select-option:hover {
+    background-color: var(--fill-faint);
+}
+
+.custom-select-option.selected {
+    color: var(--accent-purple);
+    font-weight: 500;
+}
+
+.custom-select-option.selected:hover {
+    background-color: rgba(5, 150, 105, 0.08);
+}
+
+.custom-select-check {
+    color: var(--accent-purple);
+    flex-shrink: 0;
+}
