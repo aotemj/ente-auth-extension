@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "AuthVault",
+    "name": "AuthVault 2FA - OTP Autofill for Ente Auth",
     "version": "0.5.0",
     "description": "Secure 2FA autofill powered by your Ente Auth vault",
     "permissions": ["storage", "activeTab", "alarms"],
