@@ -22,7 +22,7 @@ const themeColors = {
         textMuted: "rgba(255, 255, 255, 0.70)",
         textFaint: "rgba(255, 255, 255, 0.50)",
         stroke: "rgba(255, 255, 255, 0.12)",
-        accentPurple: "#8F33D6",
+        accentPurple: "#059669",
         success: "#4CAF50",
     },
     light: {
@@ -32,7 +32,7 @@ const themeColors = {
         textMuted: "rgba(0, 0, 0, 0.60)",
         textFaint: "rgba(0, 0, 0, 0.50)",
         stroke: "rgba(0, 0, 0, 0.12)",
-        accentPurple: "#8F33D6",
+        accentPurple: "#059669",
         success: "#4CAF50",
     },
 };
@@ -383,7 +383,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <path
                                 d="M12 2L3 7V12C3 16.97 6.84 21.66 12 23C17.16 21.66 21 16.97 21 12V7L12 2Z"
-                                fill="#8F33D6"
+                                fill="#059669"
                             />
                             <path
                                 d="M10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z"
@@ -480,7 +480,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <path
                             d="M12 2L3 7V12C3 16.97 6.84 21.66 12 23C17.16 21.66 21 16.97 21 12V7L12 2Z"
-                            fill="#8F33D6"
+                            fill="#059669"
                         />
                         <path
                             d="M10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z"
@@ -555,7 +555,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path
                         d="M12 2L3 7V12C3 16.97 6.84 21.66 12 23C17.16 21.66 21 16.97 21 12V7L12 2Z"
-                        fill="#8F33D6"
+                        fill="#059669"
                     />
                     <path
                         d="M10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z"
@@ -772,7 +772,7 @@ const AuthPromptDropdown: React.FC<AuthPromptDropdownProps> = ({
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path
                         d="M12 2L3 7V12C3 16.97 6.84 21.66 12 23C17.16 21.66 21 16.97 21 12V7L12 2Z"
-                        fill="#8F33D6"
+                        fill="#059669"
                     />
                     <path
                         d="M10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z"

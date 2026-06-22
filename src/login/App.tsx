@@ -968,7 +968,7 @@ const Logo: React.FC = () => (
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
         <path
             d="M12 2L3 7V12C3 16.97 6.84 21.66 12 23C17.16 21.66 21 16.97 21 12V7L12 2Z"
-            fill="#8F33D6"
+            fill="#059669"
         />
         <path
             d="M10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z"
