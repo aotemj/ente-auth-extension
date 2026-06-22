@@ -49,15 +49,15 @@ jobs:
             echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Chrome zip
+      - name: Create Chrome/Edge zip
         run: |
           cd dist-chrome
-          zip -r ../ente-auth-chrome-${{ steps.version.outputs.version }}.zip .
+          zip -r ../authvault-chrome-${{ steps.version.outputs.version }}.zip .
 
       - name: Create Firefox zip (unsigned)
         run: |
           cd dist-firefox
-          zip -r ../ente-auth-firefox-${{ steps.version.outputs.version }}.zip .
+          zip -r ../authvault-firefox-${{ steps.version.outputs.version }}.zip .
 
       - name: Sign Firefox extension
         if: ${{ env.AMO_JWT_ISSUER != '' }}
@@ -67,37 +67,48 @@ jobs:
         run: |
           npm install -g web-ext
           web-ext sign --source-dir=dist-firefox --channel=unlisted --api-key=$AMO_JWT_ISSUER --api-secret=$AMO_JWT_SECRET
-          mv web-ext-artifacts/*.xpi ente-auth-firefox-${{ steps.version.outputs.version }}.xpi
+          mv web-ext-artifacts/*.xpi authvault-firefox-${{ steps.version.outputs.version }}.xpi
 
       - name: Generate Release Notes
         id: release_notes
         run: |
-          # Get the previous tag
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
 
           echo "notes<<EOF" >> $GITHUB_OUTPUT
 
+          echo "## AuthVault v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "### Downloads" >> $GITHUB_OUTPUT
+          echo "- **Chrome / Edge**: \`authvault-chrome-${{ steps.version.outputs.version }}.zip\` — load as unpacked extension or upload to Edge Add-ons" >> $GITHUB_OUTPUT
+          echo "- **Firefox**: \`authvault-firefox-${{ steps.version.outputs.version }}.zip\` (unsigned) or \`.xpi\` (signed, if available)" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "### Changes" >> $GITHUB_OUTPUT
+
           if [ -n "$PREV_TAG" ]; then
-            # Get the commit message body (skip the subject line, get everything else)
-            git log $PREV_TAG..HEAD --pretty=format:"%b" | head -50 >> $GITHUB_OUTPUT
+            git log $PREV_TAG..HEAD --pretty=format:"- %s" | head -30 >> $GITHUB_OUTPUT
           else
-            git log --pretty=format:"%b" -1 | head -50 >> $GITHUB_OUTPUT
+            git log --pretty=format:"- %s" -10 >> $GITHUB_OUTPUT
           fi
 
           echo "" >> $GITHUB_OUTPUT
-          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+
+          if [ -n "$PREV_TAG" ]; then
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: v${{ steps.version.outputs.version }}
+          name: AuthVault v${{ steps.version.outputs.version }}
           tag_name: v${{ steps.version.outputs.version }}
           body: ${{ steps.release_notes.outputs.notes }}
           fail_on_unmatched_files: false
           files: |
-            ente-auth-chrome-${{ steps.version.outputs.version }}.zip
-            ente-auth-firefox-${{ steps.version.outputs.version }}.zip
-            ente-auth-firefox-${{ steps.version.outputs.version }}.xpi
+            authvault-chrome-${{ steps.version.outputs.version }}.zip
+            authvault-firefox-${{ steps.version.outputs.version }}.zip
+            authvault-firefox-${{ steps.version.outputs.version }}.xpi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
