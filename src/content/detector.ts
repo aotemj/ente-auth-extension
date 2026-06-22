@@ -242,6 +242,7 @@ const MFA_LABEL_PATTERNS = [
     "authentication code",
     "security code",
     "2-factor",
+    "2fa",
     "two-factor",
     "6-digit code",
     "6 digit code",
@@ -450,7 +451,17 @@ const calculateConfidence = (input: HTMLInputElement): number => {
         // Still allow if name/id/class strongly suggests OTP
         const nameIdClass = `${input.name || ""} ${input.id || ""} ${input.className || ""}`;
         if (!matchesPattern(nameIdClass, MFA_ATTRIBUTE_PATTERNS)) {
-            return 0;
+            // Also check placeholder, label and aria-label for MFA signals
+            // before giving up (e.g. Atlassian Confluence's 2FA plugin has
+            // no maxlength but placeholder says "Enter token from authenticator app")
+            const label = findLabelForInput(input);
+            const hasLabelSignal =
+                matchesPattern(input.placeholder, MFA_LABEL_PATTERNS) ||
+                matchesPattern(input.getAttribute("aria-label"), MFA_LABEL_PATTERNS) ||
+                (label && matchesPattern(label.textContent, MFA_LABEL_PATTERNS));
+            if (!hasLabelSignal) {
+                return 0;
+            }
         }
     }
 
@@ -720,9 +731,10 @@ export const detectMFAFields = (): MFAFieldDetection[] => {
         detections.push(splitDetection);
     }
 
-    // Then check single inputs
+    // Then check single inputs (include password fields — some 2FA plugins
+    // use type="password" to hide the OTP; we filter below based on MFA signals).
     const inputs = document.querySelectorAll<HTMLInputElement>(
-        'input[type="text"], input[type="tel"], input[type="number"], input:not([type])'
+        'input[type="text"], input[type="tel"], input[type="number"], input[type="password"], input:not([type])'
     );
 
     inputs.forEach((input) => {
@@ -736,8 +748,18 @@ export const detectMFAFields = (): MFAFieldDetection[] => {
         // Skip if already part of a split detection
         if (splitDetection?.splitInputs?.includes(input)) return;
 
-        // Skip password fields
-        if (input.type === "password") return;
+        // For password fields, only proceed if there are strong MFA signals.
+        // This avoids treating normal login password fields as OTP inputs.
+        if (input.type === "password") {
+            const nameIdClass = `${input.name || ""} ${input.id || ""} ${input.className || ""}`;
+            const label = findLabelForInput(input);
+            const hasMFASignal =
+                matchesPattern(nameIdClass, MFA_ATTRIBUTE_PATTERNS) ||
+                matchesPattern(input.placeholder, MFA_LABEL_PATTERNS) ||
+                matchesPattern(input.getAttribute("aria-label"), MFA_LABEL_PATTERNS) ||
+                (label && matchesPattern(label.textContent, MFA_LABEL_PATTERNS));
+            if (!hasMFASignal) return;
+        }
 
         const confidence = calculateConfidence(input);
         if (confidence >= 0.3) {

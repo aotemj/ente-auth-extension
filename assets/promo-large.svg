@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#065F46"/>
+      <stop offset="100%" style="stop-color:#064E3B"/>
+    </linearGradient>
+    <linearGradient id="lock" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669"/>
+      <stop offset="100%" style="stop-color:#10B981"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="1400" height="560" fill="url(#bg)"/>
+  <!-- Lock icon -->
+  <g transform="translate(480, 195)">
+    <rect x="34" y="80" width="92" height="76" rx="18" fill="url(#lock)"/>
+    <path d="M54 80 L54 60 C54 42 66 32 80 32 C94 32 106 42 106 60 L106 80" fill="none" stroke="url(#lock)" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="68" cy="118" r="6" fill="#fff" opacity="0.95"/>
+    <circle cx="80" cy="118" r="6" fill="#fff" opacity="0.95"/>
+    <circle cx="92" cy="118" r="6" fill="#fff" opacity="0.95"/>
+    <line x1="68" y1="124" x2="68" y2="140" stroke="#fff" stroke-width="4" opacity="0.7" stroke-linecap="round"/>
+    <line x1="80" y1="124" x2="80" y2="134" stroke="#fff" stroke-width="4" opacity="0.7" stroke-linecap="round"/>
+    <line x1="92" y1="124" x2="92" y2="140" stroke="#fff" stroke-width="4" opacity="0.7" stroke-linecap="round"/>
+  </g>
+  <!-- Text -->
+  <text x="700" y="245" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="700" fill="#ffffff" text-anchor="start">AuthVault 2FA</text>
+  <text x="700" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="24" fill="rgba(255,255,255,0.7)" text-anchor="start">OTP Autofill for Ente Auth</text>
+  <!-- Tagline -->
+  <text x="700" y="360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="18" fill="rgba(255,255,255,0.5)" text-anchor="start">Secure 2FA autofill directly in your browser</text>
+</svg>

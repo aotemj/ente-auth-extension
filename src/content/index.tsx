@@ -114,9 +114,11 @@ const renderIconForCurrentDetection = async (): Promise<void> => {
             : currentDetection.element;
         const placement: "inside" | "outside" = isSplit ? "outside" : "inside";
 
-        showPopup(matches, timeOffset, (otp: string) => {
+        showPopup(matches, timeOffset, (otp: string, isManual = false) => {
             if (currentDetection) {
-                fillCode(currentDetection, otp);
+                // isManual=true when user clicks from dropdown: always allow.
+                // isManual=false for auto-fill: guarded against repeated fills.
+                fillCode(currentDetection, otp, true, isManual);
             }
         }, anchorElement, autoFillSingleMatch, authState, placement);
     } catch (error) {
@@ -180,7 +182,7 @@ const handleMessage = (
 ): boolean => {
     const msg = message as { type?: string; code?: string };
     if (msg.type === "FILL_OTP" && msg.code && currentDetection) {
-        fillCode(currentDetection, msg.code);
+        fillCode(currentDetection, msg.code, true, true);
         sendResponse({ success: true });
     }
     return false;

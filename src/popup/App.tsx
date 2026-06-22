@@ -813,7 +813,7 @@ export const App: React.FC = () => {
         return (
             <div className="popup-container">
                 <div className="auth-container">
-                    <div className="auth-logo">
+                    <div className="auth-logo loading">
                         <Logo />
                     </div>
                     <div className="auth-title">Loading...</div>
