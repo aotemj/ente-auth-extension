@@ -1,5 +1,7 @@
 # AuthVault 2FA - OTP Autofill for Ente Auth
 
+[中文说明](README_CN.md)
+
 A browser extension that brings your Ente Auth 2FA codes directly into your browser with smart autofill.
 
 > **Note**: This is a modified fork of [ente-auth-extension](https://github.com/aheimowitz/ente-auth-extension) by aheimowitz, redistributed under AGPL-3.0. It is not officially affiliated with the Ente team.
