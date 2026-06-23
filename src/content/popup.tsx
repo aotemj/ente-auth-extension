@@ -942,9 +942,9 @@ const AutofillIcon: React.FC<AutofillIconProps> = ({
                 }}
                 title={iconTitle}
             >
-                {/* Use the same PNG icon as extension toolbar */}
+                {/* Use higher-res icon to avoid blurriness */}
                 <img
-                    src={browser.runtime.getURL("assets/icons/icon16.png")}
+                    src={browser.runtime.getURL("assets/icons/icon32.png")}
                     alt="AuthVault"
                     width="20"
                     height="20"

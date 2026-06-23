@@ -1,6 +1,6 @@
 {
     "name": "authvault",
-    "version": "0.5.3",
+    "version": "0.5.4",
     "private": true,
     "description": "AuthVault - Secure 2FA autofill powered by your Ente Auth vault",
     "scripts": {

@@ -10,6 +10,58 @@ import type { MFAFieldDetection } from "@shared/types";
 const autoFilledElements = new WeakSet<HTMLInputElement>();
 
 /**
+ * Maximum number of auto-submit attempts per page before stopping.
+ * Prevents triggering rate limits on sites like GitHub when submission fails
+ * and the page reloads repeatedly.
+ */
+const MAX_AUTO_SUBMIT_ATTEMPTS = 2;
+
+/**
+ * SessionStorage key for tracking auto-submit attempts on the current page.
+ */
+const SUBMIT_ATTEMPTS_KEY = "authvault_submit_attempts";
+
+/**
+ * Get the number of auto-submit attempts for the current page.
+ */
+const getSubmitAttempts = (): number => {
+    try {
+        const data = sessionStorage.getItem(SUBMIT_ATTEMPTS_KEY);
+        if (!data) return 0;
+        const parsed = JSON.parse(data);
+        // Only count attempts for the same URL path
+        if (parsed.path === window.location.pathname) {
+            return parsed.count;
+        }
+        return 0;
+    } catch {
+        return 0;
+    }
+};
+
+/**
+ * Increment the auto-submit attempt counter for the current page.
+ */
+const incrementSubmitAttempts = (): void => {
+    try {
+        const current = getSubmitAttempts();
+        sessionStorage.setItem(SUBMIT_ATTEMPTS_KEY, JSON.stringify({
+            path: window.location.pathname,
+            count: current + 1,
+        }));
+    } catch {
+        // Ignore storage errors
+    }
+};
+
+/**
+ * Check if auto-submit is allowed (under the max attempt limit).
+ */
+const canAutoSubmit = (): boolean => {
+    return getSubmitAttempts() < MAX_AUTO_SUBMIT_ATTEMPTS;
+};
+
+/**
  * Check if an element has already been auto-filled.
  */
 export const hasBeenAutoFilled = (element: HTMLInputElement): boolean => {
@@ -45,10 +97,17 @@ export const fillCode = (detection: MFAFieldDetection, code: string, autoSubmit 
 
     // Auto-submit after a delay to let frameworks process the input events
     // and enable submit buttons (some frameworks need time for validation).
+    // Respect the max attempt limit to avoid triggering rate limits.
     if (autoSubmit) {
-        setTimeout(() => {
-            clickSubmitButton(detection.element);
-        }, 300);
+        // User-initiated fills always submit; auto-fills check the limit.
+        if (force || canAutoSubmit()) {
+            incrementSubmitAttempts();
+            setTimeout(() => {
+                clickSubmitButton(detection.element);
+            }, 300);
+        } else {
+            console.log("[AuthVault] Auto-submit skipped: max attempts reached for this page");
+        }
     }
 };
 

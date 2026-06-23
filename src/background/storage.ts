@@ -15,6 +15,7 @@ const KEYS = {
     EMAIL: "email",
     CUSTOM_DOMAIN_MAPPINGS: "customDomainMappings",
     USAGE_STATS: "usageStats",
+    SORT_ORDER: "sortOrder",
     // Master key storage location depends on lockOnBrowserClose setting
     MASTER_KEY: "masterKey",
     MASTER_KEY_SESSION: "masterKeySession",
@@ -211,6 +212,9 @@ export const settingsStorage = {
         const showAutofillIcon = stored?.showAutofillIcon ?? legacyAutofill ?? true;
         const autoFillSingleMatch = stored?.autoFillSingleMatch ?? legacyAutofill ?? true;
 
+        // Read sortOrder from sync storage (cross-device), fall back to local
+        const syncedSortOrder = await syncStore.get<ExtensionSettings["sortOrder"]>(KEYS.SORT_ORDER);
+
         return {
             showAutofillIcon,
             autoFillSingleMatch,
@@ -219,13 +223,18 @@ export const settingsStorage = {
             lockOnBrowserClose: stored?.lockOnBrowserClose ?? false,
             serverUrl: stored?.serverUrl ?? "",
             accountsUrl: stored?.accountsUrl ?? "",
-            sortOrder: stored?.sortOrder ?? "issuer",
+            sortOrder: syncedSortOrder ?? stored?.sortOrder ?? "issuer",
         };
     },
 
     async setSettings(settings: Partial<ExtensionSettings>): Promise<void> {
         const current = await this.getSettings();
         await localStore.set(KEYS.SETTINGS, { ...current, ...settings });
+
+        // Sync sortOrder to cloud when it changes
+        if (settings.sortOrder !== undefined) {
+            await syncStore.set(KEYS.SORT_ORDER, settings.sortOrder);
+        }
     },
 
     async clearSettings(): Promise<void> {
