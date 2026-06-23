@@ -530,6 +530,7 @@ export const App: React.FC = () => {
                                         value={newMappingIssuer}
                                         onChange={(val) => setNewMappingIssuer(val)}
                                         placeholder="Select a code..."
+                                        className="full-width"
                                         options={uniqueIssuers.map((issuer) => ({
                                             value: issuer,
                                             label: issuer,

@@ -385,12 +385,13 @@ body {
 
 .mapping-item.builtin.expanded {
     opacity: 1;
-    flex-direction: column;
-    align-items: stretch;
+    flex-wrap: wrap;
+    align-items: flex-start;
 }
 
 .mapping-item.builtin.expanded .mapping-info {
     flex-wrap: wrap;
+    flex: 1;
 }
 
 .mapping-info {
@@ -735,4 +736,8 @@ body {
 .custom-select-check {
     color: var(--accent-purple);
     flex-shrink: 0;
+}
+
+.custom-select.full-width {
+    width: 100%;
 }
